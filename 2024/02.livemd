@@ -7,7 +7,7 @@ Mix.install([
 ])
 ```
 
-## Section
+## Input
 
 ```elixir
 opts = [headers: [{"cookie", "session=#{System.fetch_env!("LB_AOC_SESSION")}"}]]
@@ -89,4 +89,4 @@ Benchee.run(
 | puzzle_1 | 167.49 | 5.97 ms  | ±8.91%   | 5.85 ms  | 7.06 ms  |
 | puzzle_2 | 27.91  | 35.82 ms | ±17.06%  | 32.57 ms | 56.68 ms |
 
-<!-- livebook:{"offset":1621,"stamp":{"token":"XCP.AOul2ZAnLbtt_0RTl8GSkw6Da7rYETQtp59s7BbU6bbS3jeYAN75Na_fa55KABqKCHzg20MHm5vri2OYMf5F82oQgpzbcOEcpXNCNjV3AkVgVLFt1eQ","version":2}} -->
+<!-- livebook:{"offset":1619,"stamp":{"token":"XCP.RcWXXmgYv17ixmzN18zFYjiTXlCR5ldmXowBLGqXSZPG7AJxGdrsQL4ZzY6yFDIxqlIhBCS1draFMeWm26nwyX_gczn6r38m5-b-Hty5Ei_DiSKUQLU","version":2}} -->
