@@ -84,9 +84,9 @@ Benchee.run(
   })
 ```
 
-| Name     | ips    | average  | deviation | median   | 99th %  |
-| -------- | ------ | -------- | --------- | -------- | ------- |
-| puzzle_1 | 234.78 | 4.26 ms  | ±28.56%  | 4.16 ms  | 4.56 ms |
-| puzzle_2 | 30.75  | 32.52 ms | ±4.71%   | 32.33 ms | 41.50 m |
+| Name     | ips    | average  | deviation | median   | 99th %   |
+| -------- | ------ | -------- | --------- | -------- | -------- |
+| puzzle_1 | 167.49 | 5.97 ms  | ±8.91%   | 5.85 ms  | 7.06 ms  |
+| puzzle_2 | 27.91  | 35.82 ms | ±17.06%  | 32.57 ms | 56.68 ms |
 
-<!-- livebook:{"offset":1617,"stamp":{"token":"XCP.pmv7RbXJEYdGCHHSSfsgXTbDzTgVltSgDj4-iiE-lJ8rWug4pLahIIhQxnecYC3_7qmJ-lHZQB9upan4AMStb4xM-MG5D1sL96PDIRtVyGT04SzBbo0","version":2}} -->
+<!-- livebook:{"offset":1621,"stamp":{"token":"XCP.AOul2ZAnLbtt_0RTl8GSkw6Da7rYETQtp59s7BbU6bbS3jeYAN75Na_fa55KABqKCHzg20MHm5vri2OYMf5F82oQgpzbcOEcpXNCNjV3AkVgVLFt1eQ","version":2}} -->
