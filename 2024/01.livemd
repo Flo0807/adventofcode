@@ -1,0 +1,74 @@
+# Advent of Code 2024 - Day 01
+
+```elixir
+Mix.install([
+  {:req, "~> 0.5"},
+  {:benchee, "~> 1.3"}
+])
+```
+
+## Input
+
+```elixir
+opts = [headers: [{"cookie", "session=#{System.fetch_env!("LB_AOC_SESSION")}"}]]
+puzzle_input = Req.get!("https://adventofcode.com/2024/day/1/input", opts).body
+```
+
+```elixir
+{left, right} =
+  puzzle_input
+  |> String.split("\n", trim: true)
+  |> Enum.map(fn row ->
+    row
+    |> String.split()
+    |> then(fn [l, r] -> {String.to_integer(l), String.to_integer(r)} end)
+  end)
+  |> Enum.unzip()
+```
+
+## Puzzle 1
+
+```elixir
+puzzle_1 = fn ->
+  Enum.zip(Enum.sort(left), Enum.sort(right))
+  |> Enum.map(fn {l, r} ->
+    abs(l - r )
+  end)
+  |> Enum.sum()
+end
+
+puzzle_1.()
+```
+
+## Puzzle 2
+
+```elixir
+puzzle_2 = fn ->
+  frequencies = Enum.frequencies(right)
+  
+  left
+  |> Enum.map(fn num ->
+    Map.get(frequencies, num, 0) * num
+  end)
+  |> Enum.sum()
+end
+
+puzzle_2.()
+```
+
+## Benchmark
+
+```elixir
+Benchee.run(
+  %{
+    "puzzle_1" => fn -> puzzle_1.() end,
+    "puzzle_2" => fn -> puzzle_2.() end
+  })
+```
+
+| Name     | ips    | average    | deviation | median      | 99th %      |
+| -------- | ------ | ---------- | --------- | ----------- | ----------- |
+| puzzle_1 | 1.33 K | 752.91 μs | ±96.15%  | 709.67 μs  | 1044.01 μs |
+| puzzle_2 | 1.07 K | 931.37 μs | ±20.66%  | 1004.50 μs | 1234.57 μs |
+
+<!-- livebook:{"offset":1334,"stamp":{"token":"XCP.5HlBjq2TLo7FyThaO8kMjLJie4Rv6xRO0b7axUUj4RhVLzrmzuNGexdKQ8v1HE4El67ujxLs4bwm6mEmHLbe6Q_nVD5f6Zbh3abko7tqfLcx2GvSACE","version":2}} -->
