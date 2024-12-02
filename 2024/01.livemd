@@ -32,7 +32,7 @@ puzzle_input = Req.get!("https://adventofcode.com/2024/day/1/input", opts).body
 puzzle_1 = fn ->
   Enum.zip(Enum.sort(left), Enum.sort(right))
   |> Enum.map(fn {l, r} ->
-    abs(l - r )
+    abs(l - r)
   end)
   |> Enum.sum()
 end
@@ -56,7 +56,7 @@ end
 puzzle_2.()
 ```
 
-## Benchmark
+## Benchmarks
 
 ```elixir
 Benchee.run(
@@ -71,4 +71,4 @@ Benchee.run(
 | puzzle_1 | 1.33 K | 752.91 μs | ±96.15%  | 709.67 μs  | 1044.01 μs |
 | puzzle_2 | 1.07 K | 931.37 μs | ±20.66%  | 1004.50 μs | 1234.57 μs |
 
-<!-- livebook:{"offset":1334,"stamp":{"token":"XCP.5HlBjq2TLo7FyThaO8kMjLJie4Rv6xRO0b7axUUj4RhVLzrmzuNGexdKQ8v1HE4El67ujxLs4bwm6mEmHLbe6Q_nVD5f6Zbh3abko7tqfLcx2GvSACE","version":2}} -->
+<!-- livebook:{"offset":1334,"stamp":{"token":"XCP.QEDOpVk8bNyqKDTpGG8aB3f_GuyymivDgFEVcpJOIt1vGngVjQgS0BKhyPzuSlSK-JOjz5G50B3-Jha8_huR_kDLo8xPkQdLtdA-VRFPGRTCuEBS83M","version":2}} -->
