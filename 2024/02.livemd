@@ -29,17 +29,19 @@ reports =
 
 ```elixir
 valid_sequence? = fn sequence ->
-  [head | tail] = sequence
-  
-  desc? = Enum.reduce_while(tail, head, fn el, acc ->
-    if el < acc and (acc - el <= 3) , do: {:cont, el}, else: {:halt, false}
-  end)
+  pairs = Enum.chunk_every(sequence, 2, 1, :discard)
 
-  asc? = Enum.reduce_while(tail, head, fn el, acc ->
-    if el > acc and (el - acc <= 3), do: {:cont, el}, else: {:halt, false}
-  end)
+  desc? =
+    Enum.all?(pairs, fn [a, b] ->
+      b > a and abs(a-b) <= 3
+    end)
 
-  desc? || asc?
+  asc? =
+    Enum.all?(pairs, fn [a, b] ->
+      a > b and abs(a-b) <= 3
+    end)
+
+  desc? or asc?
 end
 ```
 
@@ -82,9 +84,9 @@ Benchee.run(
   })
 ```
 
-| Name     | ips    | average  | deviation | median   | 99th %   |
-| -------- | ------ | -------- | --------- | -------- | -------- |
-| puzzle_1 | 179.64 | 5.57 ms  | ±14.80%  | 5.31 ms  | 7.78 ms  |
-| puzzle_2 | 17.26  | 57.95 ms | ±5.31%   | 56.95 ms | 74.57 ms |
+| Name     | ips    | average  | deviation | median   | 99th %  |
+| -------- | ------ | -------- | --------- | -------- | ------- |
+| puzzle_1 | 234.78 | 4.26 ms  | ±28.56%  | 4.16 ms  | 4.56 ms |
+| puzzle_2 | 30.75  | 32.52 ms | ±4.71%   | 32.33 ms | 41.50 m |
 
-<!-- livebook:{"offset":1704,"stamp":{"token":"XCP.gxjWsNMdz3QFxz-bLvgTP03wMymrnM7nDBy8ztx7QlGu311M4rOGHwMiHYWEsBsRsLFz5nbFlygVjAhCnfIuO1mQ8NVbv3IblP-ryiG0fVs_qIL6woM","version":2}} -->
+<!-- livebook:{"offset":1617,"stamp":{"token":"XCP.pmv7RbXJEYdGCHHSSfsgXTbDzTgVltSgDj4-iiE-lJ8rWug4pLahIIhQxnecYC3_7qmJ-lHZQB9upan4AMStb4xM-MG5D1sL96PDIRtVyGT04SzBbo0","version":2}} -->
