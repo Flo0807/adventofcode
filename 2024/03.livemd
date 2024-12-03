@@ -1,0 +1,75 @@
+# Advent of Code 2024 - Day 03
+
+```elixir
+Mix.install([
+  {:req, "~> 0.5"},
+  {:benchee, "~> 1.3"}
+])
+```
+
+## Input
+
+```elixir
+opts = [headers: [{"cookie", "session=#{System.fetch_env!("LB_AOC_SESSION")}"}]]
+puzzle_input = Req.get!("https://adventofcode.com/2024/day/3/input", opts).body
+```
+
+```elixir
+
+```
+
+## Puzzle 1
+
+```elixir
+puzzle_1 = fn ->
+  Regex.scan(~r/mul\((\d+),(\d+)\)/, puzzle_input, capture: :all_but_first)
+  |> Enum.map(fn [a, b] ->
+    String.to_integer(a) * String.to_integer(b)
+  end)
+  |> Enum.sum()
+end
+
+puzzle_1.()
+```
+
+## Puzzle 2
+
+```elixir
+puzzle_2 = fn ->
+  Regex.scan(~r/mul\((-?\d+),(-?\d+)\)|do(?:n't)?\(\)/, puzzle_input)
+  |> Enum.reduce({0, :enabled}, fn
+    ["don't()"], {count, _status} ->
+      {count, :disabled}
+
+    ["do()"], {count, _status} ->
+      {count, :enabled}
+
+    [_text, a, b], {count, :enabled} ->
+      result = String.to_integer(a) * String.to_integer(b)
+
+      {result + count, :enabled}
+
+    [_text, _a, _b], {count, :disabled} ->
+      {count, :disabled}
+  end)
+  |> elem(0)
+end
+
+puzzle_2.()
+```
+
+## Benchmarks
+
+```elixir
+Benchee.run(%{
+  "puzzle_1" => fn -> puzzle_1.() end,
+  "puzzle_2" => fn -> puzzle_2.() end
+})
+```
+
+| Name     | ips    | average | deviation | median  | 99th %  |
+| -------- | ------ | ------- | --------- | ------- | ------- |
+| puzzle_1 | 1.11 K | 0.90 ms | ±12.18%  | 0.88 ms | 1.07 ms |
+| puzzle_2 | 0.45 K | 2.23 ms | ±7.49%   | 2.20 ms | 2.47 ms |
+
+<!-- livebook:{"offset":1437,"stamp":{"token":"XCP.Ird91bO4Sbk07P1a06R10n6MV5H0NGcxrCXd9j-IwakvXE4QWYi1t7exFzN6TSd28MWOWw_TcfBUBIMWmreICbUgJEUFZ9KOpe9iUxXjRNgCPAgdtMs","version":2}} -->
