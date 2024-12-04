@@ -94,7 +94,6 @@ end
 ```
 
 ```elixir
-# we assume input is a square
 col_size = Map.get(grid, 0) |> Map.keys() |> length()
 row_size = Map.keys(grid) |> length()
 
@@ -144,4 +143,4 @@ Benchee.run(%{
 | puzzle_1 | 15.40 | 64.94 ms | ±3.90%   | 64.37 ms | 82.61 ms |
 | puzzle_2 | 27.07 | 36.94 ms | ±12.27%  | 36.32 ms | 73.06 ms |
 
-<!-- livebook:{"offset":3010,"stamp":{"token":"XCP.38OaCtBPRt57b3pgEroVU0PIHJI6TTAxuzPnbQHJg7uSMrpBssI0ML4DFrXS2hJ0XMO9dLfHNRoM3m94hXUlIY-IRWx8sQbL8tL6uPc-tBc6wmAOCh0","version":2}} -->
+<!-- livebook:{"offset":2980,"stamp":{"token":"XCP.idnUCxbdM3svqb9g5KPk5fgRrjRMAasLCUeEx-RriW0NNj9F9FLNxQSOWHG0VxYgNRjyz5cTPKLSqRnfi1T69XfkU_9Ta4UGOyqJmuxIazFIvXI-Gvo","version":2}} -->
