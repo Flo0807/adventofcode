@@ -32,55 +32,55 @@ grid =
 
 ```elixir
 defmodule Grid do
-  defp all_directions, do: diagonal_directions() ++ orthogonal_directions()
+  defp all_dirs, do: diagonal_dirs() ++ orthogonal_dirs()
 
-  defp diagonal_directions, do: [{-1, -1}, {1, -1}, {1, 1}, {-1, 1}]
+  defp diagonal_dirs, do: [{-1, -1}, {1, -1}, {1, 1}, {-1, 1}]
 
-  defp orthogonal_directions, do: [{0, -1}, {1, 0}, {0, 1}, {-1, 0}]
+  defp orthogonal_dirs, do: [{0, -1}, {1, 0}, {0, 1}, {-1, 0}]
 
-  defp flip_direction({col, row}), do: {-col, -row}
+  defp flip_dir({col, row}), do: {-col, -row}
 
-  defp apply_direction({col_modifier, row_modifier} = _direction, {col, row} = _pos) do
+  defp move_dir({col_modifier, row_modifier} = _dir, {col, row} = _pos) do
     {col + col_modifier, row + row_modifier}
   end
 
   def check(grid, pos) do
-    for direction <- all_directions() do
-      check(grid, direction, pos)
+    for dir <- all_dirs() do
+      check(grid, dir, pos)
     end
     |> Enum.sum()
   end
 
   def check_x(grid, pos) do
     result =
-      for direction <- diagonal_directions() do
-        check_x(grid, direction, pos)
+      for dir <- diagonal_dirs() do
+        check_x(grid, dir, pos)
       end
       |> Enum.sum()
 
     if result > 1, do: 1, else: 0
   end
 
-  def check_x(grid, direction, pos) do
-    start_pos = direction |> flip_direction() |> apply_direction(pos)
+  def check_x(grid, dir, pos) do
+    start_pos = dir |> flip_dir() |> move_dir(pos)
 
-    case build_sequence(grid, 0..2, start_pos, direction) do
+    case build_sequence(grid, 0..2, start_pos, dir) do
       "MAS" -> 1
       _other -> 0
     end
   end
 
-  def check(grid, direction, pos) do
-    case build_sequence(grid, 0..3, pos, direction) do
+  def check(grid, dir, pos) do
+    case build_sequence(grid, 0..3, pos, dir) do
       "XMAS" -> 1
       _other -> 0
     end
   end
 
-  defp build_sequence(grid, range, start_pos, direction) do
+  defp build_sequence(grid, range, start_pos, dir) do
     Enum.reduce(range, {"", start_pos}, fn _index, {text, pos} ->
       current_text = at(grid, pos)
-      new_pos = apply_direction(direction, pos)
+      new_pos = move_dir(dir, pos)
 
       {text <> current_text, new_pos}
     end)
@@ -144,4 +144,4 @@ Benchee.run(%{
 | puzzle_1 | 15.40 | 64.94 ms | ±3.90%   | 64.37 ms | 82.61 ms |
 | puzzle_2 | 27.07 | 36.94 ms | ±12.27%  | 36.32 ms | 73.06 ms |
 
-<!-- livebook:{"offset":3157,"stamp":{"token":"XCP.L5lduPGlYcMjWAPFLg4dkQhrnv1jKu-51oNtFGR2h_woQlBn4tGu_GKbweEPkvYIJYsuvwtS5JLAxAeEFG5NK12E3dwGoAHH84vUVeGXkGlipEA9ZWk","version":2}} -->
+<!-- livebook:{"offset":3010,"stamp":{"token":"XCP.38OaCtBPRt57b3pgEroVU0PIHJI6TTAxuzPnbQHJg7uSMrpBssI0ML4DFrXS2hJ0XMO9dLfHNRoM3m94hXUlIY-IRWx8sQbL8tL6uPc-tBc6wmAOCh0","version":2}} -->
