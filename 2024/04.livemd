@@ -64,21 +64,21 @@ defmodule Grid do
   def check_x(grid, dir, pos) do
     start_pos = dir |> flip_dir() |> move_dir(pos)
 
-    case build_sequence(grid, 0..2, start_pos, dir) do
+    case build_sequence(grid, 3, start_pos, dir) do
       "MAS" -> 1
-      _other -> 0
+      _invalid -> 0
     end
   end
 
   def check(grid, dir, pos) do
-    case build_sequence(grid, 0..3, pos, dir) do
+    case build_sequence(grid, 4, pos, dir) do
       "XMAS" -> 1
-      _other -> 0
+      _invalid -> 0
     end
   end
 
-  defp build_sequence(grid, range, start_pos, dir) do
-    Enum.reduce(range, {"", start_pos}, fn _index, {text, pos} ->
+  defp build_sequence(grid, amount, start_pos, dir) do
+    Enum.reduce(0..(amount-1), {"", start_pos}, fn _index, {text, pos} ->
       current_text = at(grid, pos)
       new_pos = move_dir(dir, pos)
 
@@ -143,4 +143,4 @@ Benchee.run(%{
 | puzzle_1 | 15.40 | 64.94 ms | ±3.90%   | 64.37 ms | 82.61 ms |
 | puzzle_2 | 27.07 | 36.94 ms | ±12.27%  | 36.32 ms | 73.06 ms |
 
-<!-- livebook:{"offset":2980,"stamp":{"token":"XCP.idnUCxbdM3svqb9g5KPk5fgRrjRMAasLCUeEx-RriW0NNj9F9FLNxQSOWHG0VxYgNRjyz5cTPKLSqRnfi1T69XfkU_9Ta4UGOyqJmuxIazFIvXI-Gvo","version":2}} -->
+<!-- livebook:{"offset":2987,"stamp":{"token":"XCP.zPsMawKzjeEsgBW4FY_8oQmuXIu69YkNzFspuRPCt_K04HxkpaUU5PFwx-AeeIwj2ndQxYM1IlOgalI_gk2HspJwKfhRdYHFEFkJW5QNFBQfk3p6oBw","version":2}} -->
