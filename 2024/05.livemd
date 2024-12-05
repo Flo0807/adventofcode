@@ -70,6 +70,8 @@ get_middle_page_number = fn page ->
 end
 ```
 
+## Section
+
 ```elixir
 puzzle_1 = fn ->
   Enum.reduce(pages, 0, fn el, acc ->
@@ -120,4 +122,4 @@ Benchee.run(%{
 |puzzle_1|  27.26|  36.68 ms|  ±7.41%|  35.79 ms|  53.45 ms| 
 |puzzle_2|  20.68|  48.35 ms|  ±0.68%|  48.25 ms|  49.55 ms|
 
-<!-- livebook:{"offset":2414,"stamp":{"token":"XCP.IYGhm43cTzPIFlCB0tSvZzUw7lvudxs1UvyGfHaORe6c0fA5eSb9oNJi8EN9vqW9bb7_CaB0WMX8sBeAZ43ZdW7YtiR0oz0ItEj2oGr0PE2GwgrxYyM","version":2}} -->
+<!-- livebook:{"offset":2426,"stamp":{"token":"XCP.8vCWfRcnsZRJVFpJmiqztGWnwwS9OszcxHuUlQbt1yT2QgQ5zb54Fyz6Gw9Y8patjz_RXl4x9sHsvLlKCgKff-tce8m65VVc7tsfElgWo-dP9mbsJKM","version":2}} -->
