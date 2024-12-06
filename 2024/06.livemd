@@ -68,9 +68,9 @@ end
 defmodule Puzzle1 do
   def count_visited(grid, current_pos, dir, visited) do
     facing_pos = Grid.move_dir(dir, current_pos)
-    facing_obstacle = Grid.at(grid, facing_pos)
+    facing = Grid.at(grid, facing_pos)
 
-    case facing_obstacle do
+    case facing do
       "" -> visited |> Enum.uniq() |> Enum.count()
       "." -> count_visited(grid, facing_pos, dir, [facing_pos | visited])
       "#" -> count_visited(grid, current_pos, Grid.rotate_dir_90(dir), visited)
@@ -94,16 +94,16 @@ puzzle_1.()
 defmodule Puzzle2 do
   def loop?(grid, current_pos, dir, visited \\ []) do
     facing_pos = Grid.move_dir(dir, current_pos)
-    facing_obstacle = Grid.at(grid, facing_pos)
+    facing = Grid.at(grid, facing_pos)
 
     cond do
       {current_pos, dir} in visited ->
         1
 
-      facing_obstacle == "#" ->
+      facing == "#" ->
         loop?(grid, current_pos, Grid.rotate_dir_90(dir), [{current_pos, dir} | visited])
 
-      facing_obstacle == "." ->
+      facing == "." ->
         loop?(grid, facing_pos, dir, [{current_pos, dir} | visited])
 
       true ->
@@ -138,4 +138,4 @@ end
 puzzle_2.()
 ```
 
-<!-- livebook:{"offset":3190,"stamp":{"token":"XCP.ZIz-v6sUQcM1Lm_PpVOn6JmIUrVushSMizvoGpA0ASgugGV3iX9504iqHEPT6lx7CVjDB33joZgNM--Z_4f-u3PVhnailJyoaVn_WO5E9GRgdskIDzY","version":2}} -->
+<!-- livebook:{"offset":3145,"stamp":{"token":"XCP.WfyNwHM4xw8SkDjfRkwAKKGtIRwEvi5Xt0xmbPa6kDKR-NEkjcA9-6fvUn06FOWXaH0Kth2X_jieZbT-8aZ3zD3letYtc5p0FpDyczTNHWc2e6t1JYs","version":2}} -->
