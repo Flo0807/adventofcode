@@ -1,0 +1,141 @@
+# Advent of Code 2024 - Day 06
+
+```elixir
+Mix.install([
+  {:req, "~> 0.5"},
+  {:benchee, "~> 1.3"}
+])
+```
+
+## Input
+
+```elixir
+opts = [headers: [{"cookie", "session=#{System.fetch_env!("LB_AOC_SESSION")}"}]]
+puzzle_input = Req.get!("https://adventofcode.com/2024/day/6/input", opts).body
+```
+
+```elixir
+grid =
+  String.split(puzzle_input, "\n", trim: true)
+  |> Enum.map(fn row ->
+    String.codepoints(row)
+    |> Enum.with_index()
+    |> Enum.map(fn {char, index} -> {index, char} end)
+    |> Map.new()
+  end)
+  |> Enum.with_index()
+  |> Enum.map(fn {char, index} -> {index, char} end)
+  |> Map.new()
+```
+
+## Grid
+
+```elixir
+defmodule Grid do
+  def rotate_dir_90({0, -1}), do: {1, 0}
+  def rotate_dir_90({1, 0}), do: {0, 1}
+  def rotate_dir_90({0, 1}), do: {-1, 0}
+  def rotate_dir_90({-1, 0}), do: {0, -1}
+
+  def move_dir({col_modifier, row_modifier} = _dir, {col, row} = _pos) do
+    {col + col_modifier, row + row_modifier}
+  end
+
+  def find(grid, char) do
+    Enum.reduce_while(grid, nil, fn {row_i, row_value}, _acc ->
+      case Enum.find(row_value, fn {_k, v} -> v == char end) do
+        {col_i, _col_value} -> {:halt, {col_i, row_i}}
+        nil -> {:cont, nil}
+      end
+    end)
+  end
+
+  def update(grid, {col, row} = _pos, value) do
+    Map.update!(grid, row, fn r ->
+      Map.put(r, col, value)
+    end)
+  end
+
+  def at(grid, {col, row} = _pos) do
+    get_in(grid, [row, col]) || ""
+  end
+end
+```
+
+## Puzzle 1
+
+```elixir
+defmodule Puzzle1 do
+  def count_visited(grid, current_pos, dir, visited) do
+    facing_pos = Grid.move_dir(dir, current_pos)
+    facing_obstacle = Grid.at(grid, facing_pos)
+
+    case facing_obstacle do
+      "" -> visited |> Enum.uniq() |> Enum.count()
+      "." -> count_visited(grid, facing_pos, dir, [facing_pos | visited])
+      "#" -> count_visited(grid, current_pos, Grid.rotate_dir_90(dir), visited)
+    end
+  end
+end
+
+puzzle_1 = fn ->
+  start_pos = Grid.find(grid, "^")
+  grid = Grid.update(grid, start_pos, ".")
+  
+  Puzzle1.count_visited(grid, start_pos, {0, -1}, [start_pos])
+end
+
+puzzle_1.()
+```
+
+## Puzzle 2
+
+```elixir
+defmodule Puzzle2 do
+  def loop?(grid, current_pos, dir, visited \\ []) do
+    facing_pos = Grid.move_dir(dir, current_pos)
+    facing_obstacle = Grid.at(grid, facing_pos)
+
+    cond do
+      {current_pos, dir} in visited ->
+        1
+
+      facing_obstacle == "#" ->
+        loop?(grid, current_pos, Grid.rotate_dir_90(dir), [{current_pos, dir} | visited])
+
+      facing_obstacle == "." ->
+        loop?(grid, facing_pos, dir, [{current_pos, dir} | visited])
+
+      true ->
+        0
+    end
+  end
+end
+
+puzzle_2 = fn ->
+  start_pos = Grid.find(grid, "^")
+  grid = Grid.update(grid, start_pos, ".")
+
+  row_range = Map.keys(grid) |> length()
+  col_range = Map.get(grid, 0) |> Map.keys() |> length()
+
+  positions_to_check =
+    for row <- 0..(row_range - 1), col <- 0..(col_range - 1) do
+      {col, row}
+    end
+    |> Enum.filter(fn pos ->
+      Grid.at(grid, pos) != "#" and pos != start_pos
+    end)
+
+  positions_to_check
+  |> Task.async_stream(fn pos ->
+    Grid.update(grid, pos, "#")
+    |> Puzzle2.loop?(start_pos, {0, -1})
+  end)
+  |> Enum.reduce(0, fn {:ok, result}, acc -> acc + result end)
+end
+
+puzzle_2.()
+```
+
+<!-- livebook:{"offset":3190,"stamp":{"token":"XCP.ZIz-v6sUQcM1Lm_PpVOn6JmIUrVushSMizvoGpA0ASgugGV3iX9504iqHEPT6lx7CVjDB33joZgNM--Z_4f-u3PVhnailJyoaVn_WO5E9GRgdskIDzY","version":2}} -->
