@@ -31,25 +31,31 @@ puzzle_input =
 defmodule BridgeRepair do
   def sum_of_sums(rows, operators) do
     Task.async_stream(rows, fn {sum, nums} ->
-      calculate_sums(nums, operators) |> Enum.find(0, &(&1 == sum))
+      [head | tail] = nums
+
+      if valid?(tail, sum, head, operators), do: sum, else: 0
     end)
     |> Enum.reduce(0, fn {:ok, x}, acc -> x + acc end)
   end
 
-  def calculate_sums(nums, operators) do
-    [head | tail] = nums
+  def valid?(_nums, expected, acc, _operators) when acc > expected, do: false
+  def valid?(_nums, expected, acc, _operators) when expected == acc, do: true
+  def valid?([], _expected, _acc, _operators), do: false
 
-    Enum.reduce(tail, [head], fn num, acc ->
-      for operator <- operators do
-        case operator do
-          :multiply -> Enum.map(acc, &(&1 * num))
-          :add -> Enum.map(acc, &(&1 + num))
-          :concatenation -> Enum.map(acc, &concat_nums(&1, num))
-        end
+  def valid?([x | tail], expected, acc, operators) do
+    for operator <- operators do
+      case operator do
+        :multiply -> valid?(tail, expected, x * acc, operators)
+        :add -> valid?(tail, expected, x + acc, operators)
+        :concatenation -> valid?(tail, expected, concat_nums(acc, x), operators)
       end
-      |> List.flatten()
-    end)
+    end
+    |> Enum.any?()
   end
+
+  def concat_nums(a, b) when b < 10, do: a * 10 + b
+  def concat_nums(a, b) when b < 100, do: a * 100 + b
+  def concat_nums(a, b) when b < 1_000, do: a * 1000 + b
 
   def concat_nums(a, b) do
     a * Integer.pow(10, Integer.digits(b) |> length) + b
@@ -61,8 +67,8 @@ end
 
 ```elixir
 puzzle_1 = fn ->
-  operators = [:multiply, :add]
-  BridgeRepair.sum_of_sums(puzzle_input, operators)
+operators = [:multiply, :add]
+BridgeRepair.sum_of_sums(puzzle_input, operators)
 end
 
 puzzle_1.()
@@ -72,8 +78,8 @@ puzzle_1.()
 
 ```elixir
 puzzle_2 = fn ->
-  operators = [:multiply, :add, :concatenation]
-  BridgeRepair.sum_of_sums(puzzle_input, operators)
+operators = [:multiply, :add, :concatenation]
+BridgeRepair.sum_of_sums(puzzle_input, operators)
 end
 
 puzzle_2.()
@@ -89,9 +95,9 @@ Benchee.run(
   })
 ```
 
-| Name     | ips   | average   | deviation | median    | 99th %    |
-| -------- | ----- | --------- | --------- | --------- | --------- |
-| puzzle_1 | 89.17 | 11.22 ms  | ±10.55%  | 11.05 ms  | 17.76 ms  |
-| puzzle_2 | 5.27  | 189.76 ms | ±1.38%   | 189.17 ms | 201.39 ms |
+| Name     | ips    | average  | deviation | median   | 99th %   |
+| -------- | ------ | -------- | --------- | -------- | -------- |
+| puzzle_1 | 119.32 | 8.38 ms  | ±5.76%   | 8.32 ms  | 9.90 ms  |
+| puzzle_2 | 22.29  | 44.86 ms | ±5.46%   | 44.67 ms | 62.88 ms |
 
-<!-- livebook:{"offset":2058,"stamp":{"token":"XCP.w9PZg1Nzfw65NvXyONcjOxYE0rXhUhuZZ31-MYmn4WuIIZI4QuxE9FmqThrILYdRcqbUyt5d0uTzt7qWXtXAfLuWKq0WbIfQwT60sU-Y5wjKsEXcW0M","version":2}} -->
+<!-- livebook:{"offset":2406,"stamp":{"token":"XCP.GrJl8d6NzNMsMCr3MwUAykH5hL3VdP5HKKhY7b97FPCfD4KJrRnNLVzhTG08q5H8Yp_R9i-2_YHwyufPJCFGGtF_tAXQVVOyneFomxdkpL4836jphNU","version":2}} -->
