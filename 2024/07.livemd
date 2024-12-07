@@ -30,12 +30,10 @@ puzzle_input =
 ```elixir
 defmodule BridgeRepair do
   def sum_of_sums(rows, operators) do
-    Enum.reduce(rows, 0, fn {sum, nums}, acc ->
-      case calculate_sums(nums, operators) |> Enum.any?(&(&1 == sum)) do
-        true -> acc + sum
-        false -> acc
-      end
+    Task.async_stream(rows, fn {sum, nums} ->
+      calculate_sums(nums, operators) |> Enum.find(0, &(&1 == sum))
     end)
+    |> Enum.reduce(0, fn {:ok, x}, acc -> x + acc end)
   end
 
   def calculate_sums(nums, operators) do
@@ -93,7 +91,7 @@ Benchee.run(
 
 | Name     | ips   | average   | deviation | median    | 99th %    |
 | -------- | ----- | --------- | --------- | --------- | --------- |
-| puzzle_1 | 93.90 | 10.65 ms  | ±4.00%   | 10.61 ms  | 11.08 ms  |
-| puzzle_2 | 1.05  | 950.06 ms | ±2.33%   | 940.04 ms | 979.17 ms |
+| puzzle_1 | 89.17 | 11.22 ms  | ±10.55%  | 11.05 ms  | 17.76 ms  |
+| puzzle_2 | 5.27  | 189.76 ms | ±1.38%   | 189.17 ms | 201.39 ms |
 
-<!-- livebook:{"offset":2067,"stamp":{"token":"XCP.HT1RvyD4BQiakJm8DLCW_el57PG5W0IXGADzead1h7OTS3r9FOMyo4bI3l9nWl5p0RVx9SFkHuYlTKnjzIBkIPhSgMqVxWBd5QGRUux6ektDY3yT1OY","version":2}} -->
+<!-- livebook:{"offset":2058,"stamp":{"token":"XCP.w9PZg1Nzfw65NvXyONcjOxYE0rXhUhuZZ31-MYmn4WuIIZI4QuxE9FmqThrILYdRcqbUyt5d0uTzt7qWXtXAfLuWKq0WbIfQwT60sU-Y5wjKsEXcW0M","version":2}} -->
