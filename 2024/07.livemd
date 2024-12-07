@@ -67,8 +67,8 @@ end
 
 ```elixir
 puzzle_1 = fn ->
-operators = [:multiply, :add]
-BridgeRepair.sum_of_sums(puzzle_input, operators)
+  operators = [:multiply, :add]
+  BridgeRepair.sum_of_sums(puzzle_input, operators)
 end
 
 puzzle_1.()
@@ -78,8 +78,8 @@ puzzle_1.()
 
 ```elixir
 puzzle_2 = fn ->
-operators = [:multiply, :add, :concatenation]
-BridgeRepair.sum_of_sums(puzzle_input, operators)
+  operators = [:multiply, :add, :concatenation]
+  BridgeRepair.sum_of_sums(puzzle_input, operators)
 end
 
 puzzle_2.()
@@ -100,4 +100,4 @@ Benchee.run(
 | puzzle_1 | 119.32 | 8.38 ms  | ±5.76%   | 8.32 ms  | 9.90 ms  |
 | puzzle_2 | 22.29  | 44.86 ms | ±5.46%   | 44.67 ms | 62.88 ms |
 
-<!-- livebook:{"offset":2406,"stamp":{"token":"XCP.GrJl8d6NzNMsMCr3MwUAykH5hL3VdP5HKKhY7b97FPCfD4KJrRnNLVzhTG08q5H8Yp_R9i-2_YHwyufPJCFGGtF_tAXQVVOyneFomxdkpL4836jphNU","version":2}} -->
+<!-- livebook:{"offset":2414,"stamp":{"token":"XCP.3fgkthhZkLym6mvDaHbtAcgUBMRk1ZGznKSqCEpiWOQ6K9ehYGniKzEjUclk-vkLXopKj-z4Cj6Tsl_yYyFojlCJXmRVJKyttS93LgNI50xa5EvoQIQ","version":2}} -->
