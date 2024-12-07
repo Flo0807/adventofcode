@@ -1,0 +1,99 @@
+# Advent of Code 2024 - Day 07
+
+```elixir
+Mix.install([
+  {:req, "~> 0.5"},
+  {:benchee, "~> 1.3"}
+])
+```
+
+## Input
+
+```elixir
+opts = [headers: [{"cookie", "session=#{System.fetch_env!("LB_AOC_SESSION")}"}]]
+puzzle_input = Req.get!("https://adventofcode.com/2024/day/7/input", opts).body
+```
+
+```elixir
+puzzle_input =
+  String.split(puzzle_input, "\n", trim: true)
+  |> Enum.map(fn row ->
+    [sum, nums] = String.split(row, ":", trim: true)
+
+    sum = String.to_integer(sum)
+    nums = String.split(nums, " ", trim: true) |> Enum.map(&String.to_integer(&1))
+
+    {sum, nums}
+  end)
+```
+
+```elixir
+defmodule BridgeRepair do
+  def sum_of_sums(rows, operators) do
+    Enum.reduce(rows, 0, fn {sum, nums}, acc ->
+      case calculate_sums(nums, operators) |> Enum.any?(&(&1 == sum)) do
+        true -> acc + sum
+        false -> acc
+      end
+    end)
+  end
+
+  def calculate_sums(nums, operators) do
+    [head | tail] = nums
+
+    Enum.reduce(tail, [head], fn num, acc ->
+      for operator <- operators do
+        case operator do
+          :multiply -> Enum.map(acc, &(&1 * num))
+          :add -> Enum.map(acc, &(&1 + num))
+          :concatenation -> Enum.map(acc, &concat_nums(&1, num))
+        end
+      end
+      |> List.flatten()
+    end)
+  end
+
+  def concat_nums(a, b) do
+    (Integer.to_string(a) <> Integer.to_string(b)) |> String.to_integer()
+  end
+end
+```
+
+## Puzzle 1
+
+```elixir
+puzzle_1 = fn ->
+  operators = [:multiply, :add]
+  BridgeRepair.sum_of_sums(puzzle_input, operators)
+end
+
+puzzle_1.()
+```
+
+## Puzzle 2
+
+```elixir
+puzzle_2 = fn ->
+  operators = [:multiply, :add, :concatenation]
+  BridgeRepair.sum_of_sums(puzzle_input, operators)
+end
+
+puzzle_2.()
+```
+
+## Benchmarks
+
+```elixir
+Benchee.run(
+  %{
+    "puzzle_1" => fn -> puzzle_1.() end,
+    "puzzle_2" => fn -> puzzle_2.() end
+  })
+```
+
+| Name     | ips   | average  | deviation | median   | 99th %   |
+| -------- | ----- | -------- | --------- | -------- | -------- |
+| puzzle_1 | 92.53 | 0.0108 s | ±6.13%   | 0.0107 s | 0.0135 s |
+| puzzle_2 | 0.40  | 2.53 s   | ±3.06%   | 2.53 s   | 2.58 s   |
+
+<!-- livebook:{"offset":2072,"stamp":{"token":"XCP.Qf_oXz-DIrPsbLGptV1LL3Et1muAA_igQ04sKSfya_cTtFDZK7woboAUreCvY3bHlw3cyDbAs5CG4whMO9B8KDaWVYtyhnity3JZDkesl0Pdaa7kjyc","version":2}} -->
