@@ -54,7 +54,7 @@ defmodule BridgeRepair do
   end
 
   def concat_nums(a, b) do
-    (Integer.to_string(a) <> Integer.to_string(b)) |> String.to_integer()
+    a * Integer.pow(10, Integer.digits(b) |> length) + b
   end
 end
 ```
@@ -96,4 +96,4 @@ Benchee.run(
 | puzzle_1 | 92.53 | 0.0108 s | ±6.13%   | 0.0107 s | 0.0135 s |
 | puzzle_2 | 0.40  | 2.53 s   | ±3.06%   | 2.53 s   | 2.58 s   |
 
-<!-- livebook:{"offset":2072,"stamp":{"token":"XCP.Qf_oXz-DIrPsbLGptV1LL3Et1muAA_igQ04sKSfya_cTtFDZK7woboAUreCvY3bHlw3cyDbAs5CG4whMO9B8KDaWVYtyhnity3JZDkesl0Pdaa7kjyc","version":2}} -->
+<!-- livebook:{"offset":2055,"stamp":{"token":"XCP.YAVRgy6WK-_smo_tasD3Fy_bxN1iMjKmW4L1DMB41xeQzpuQDT3IZcakfI8L6Q5aAMFFMCOHumbG46eeMoOEFxqDGq2Pp36EDx6fcON-Lagrj1G6yc0","version":2}} -->
