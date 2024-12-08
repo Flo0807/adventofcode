@@ -14,10 +14,10 @@ opts = [headers: [{"cookie", "session=#{System.fetch_env!("LB_AOC_SESSION")}"}]]
 puzzle_input = Req.get!("https://adventofcode.com/2024/day/8/input", opts).body
 ```
 
-## Grid
+## Grid & Helpers
 
 ```elixir
-defmodule ResonantCollinearity do
+defmodule Grid do
   def parse(puzzle_input) do
     puzzle_input
     |> String.split("\n", trim: true)
@@ -47,7 +47,11 @@ defmodule ResonantCollinearity do
   def outside?({col, row} = _pos, {col_count, row_count} = _dimension) do
     col >= col_count or col < 0 or row >= row_count or row < 0
   end
+end
+```
 
+```elixir
+defmodule ResonantCollinearity do
   def next_pos({col1, row1} = _pos1, {col2, row2} = _pos2) do
     {col2 + (col2 - col1), row2 + (row2 - row1)}
   end
@@ -61,7 +65,7 @@ defmodule ResonantCollinearity do
         p1 = next_pos(current_pos, other_pos)
         p2 = next_pos(other_pos, current_pos)
 
-        Enum.reject([p1, p2], &outside?(&1, grid_dimension))
+        Enum.reject([p1, p2], &Grid.outside?(&1, grid_dimension))
       end)
     end)
   end
@@ -79,7 +83,7 @@ defmodule ResonantCollinearity do
   end
 
   def generate_antinodes(grid_dimension, current_pos, next_pos, acc) do
-    if outside?(next_pos, grid_dimension) do
+    if Grid.outside?(next_pos, grid_dimension) do
       acc
     else
       new_next_pos = next_pos(current_pos, next_pos)
@@ -90,8 +94,8 @@ end
 ```
 
 ```elixir
-grid_dimension = ResonantCollinearity.dimension(puzzle_input)
-antennas = ResonantCollinearity.parse(puzzle_input)
+grid_dimension = Grid.dimension(puzzle_input)
+antennas = Grid.parse(puzzle_input)
 ```
 
 ## Puzzle 1
@@ -139,4 +143,4 @@ Benchee.run(
 | puzzle_1 | 1.99 K | 0.50 ms | ±19.11%  | 0.49 ms | 0.69 ms |
 | puzzle_2 | 0.93 K | 1.08 ms | ±20.49%  | 1.05 ms | 1.38 ms |
 
-<!-- livebook:{"offset":3421,"stamp":{"token":"XCP.-AU1Y0dL_bawTQ04g7IcG_dVK6Cm9DIYQ8e3tvatA2Xnjin5ncLcAAp2A2NSKA0_KIZTRpVnAyEHZEoXR6uJGY-o85I6y-iRKvevwNJ6EtP1L_ezZzI","version":2}} -->
+<!-- livebook:{"offset":3445,"stamp":{"token":"XCP.vTK9QrSGFCy_hr9-eDf2ncQUxM3Fpt4DWyzdSvVGPqns3kEr-d7iDx4gkSMX8iy_GE_b5cgmRj3-S6LdYGIy3oSHkyKu9QbnjBGY4coPFw9qwmussFI","version":2}} -->
