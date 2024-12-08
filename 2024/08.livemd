@@ -1,0 +1,142 @@
+# Advent of Code 2024 - Day 08
+
+```elixir
+Mix.install([
+  {:req, "~> 0.5"},
+  {:benchee, "~> 1.3"}
+])
+```
+
+## Input
+
+```elixir
+opts = [headers: [{"cookie", "session=#{System.fetch_env!("LB_AOC_SESSION")}"}]]
+puzzle_input = Req.get!("https://adventofcode.com/2024/day/8/input", opts).body
+```
+
+## Grid
+
+```elixir
+defmodule ResonantCollinearity do
+  def parse(puzzle_input) do
+    puzzle_input
+    |> String.split("\n", trim: true)
+    |> Enum.with_index()
+    |> Enum.flat_map(fn {line, row} ->
+      line
+      |> String.graphemes()
+      |> Enum.with_index()
+      |> Enum.flat_map(fn
+        {".", _col} -> []
+        {char, col} -> [{char, {col, row}}]
+      end)
+    end)
+    |> Enum.group_by(
+      fn {char, _pos} -> char end,
+      fn {_char, pos} -> pos end
+    )
+  end
+
+  def dimension(puzzle_input) do
+    lines = String.split(puzzle_input, "\n", trim: true)
+    row_count = length(lines)
+    col_count = hd(lines) |> String.length()
+    {col_count, row_count}
+  end
+
+  def outside?({col, row} = _pos, {col_count, row_count} = _dimension) do
+    col >= col_count or col < 0 or row >= row_count or row < 0
+  end
+
+  def next_pos({col1, row1} = _pos1, {col2, row2} = _pos2) do
+    {col2 + (col2 - col1), row2 + (row2 - row1)}
+  end
+
+  def find_antinodes(grid_dimension, positions) do
+    Enum.with_index(positions)
+    |> Enum.flat_map(fn {_pos, i} ->
+      {current_pos, rest} = List.pop_at(positions, i)
+
+      Enum.flat_map(rest, fn other_pos ->
+        p1 = next_pos(current_pos, other_pos)
+        p2 = next_pos(other_pos, current_pos)
+
+        Enum.reject([p1, p2], &outside?(&1, grid_dimension))
+      end)
+    end)
+  end
+
+  def find_antinodes_infinity(grid, positions) do
+    Enum.with_index(positions)
+    |> Enum.flat_map(fn {_pos, i} ->
+      {current_pos, rest} = List.pop_at(positions, i)
+
+      Enum.flat_map(rest, fn other_pos ->
+        generate_antinodes(grid, other_pos, current_pos, []) ++
+          generate_antinodes(grid, other_pos, current_pos, [])
+      end)
+    end)
+  end
+
+  def generate_antinodes(grid_dimension, current_pos, next_pos, acc) do
+    if outside?(next_pos, grid_dimension) do
+      acc
+    else
+      new_next_pos = next_pos(current_pos, next_pos)
+      generate_antinodes(grid_dimension, next_pos, new_next_pos, [next_pos | acc])
+    end
+  end
+end
+```
+
+```elixir
+grid_dimension = ResonantCollinearity.dimension(puzzle_input)
+antennas = ResonantCollinearity.parse(puzzle_input)
+```
+
+## Puzzle 1
+
+```elixir
+puzzle_1 = fn ->
+  Task.async_stream(antennas, fn {_key, positions} ->
+    ResonantCollinearity.find_antinodes(grid_dimension, positions)
+  end)
+  |> Enum.reduce([], fn {:ok, positions}, acc -> positions ++ acc end)
+  |> Enum.uniq()
+  |> Enum.count()
+end
+
+puzzle_1.()
+```
+
+## Puzzle 2
+
+```elixir
+puzzle_2 = fn ->
+  Task.async_stream(antennas, fn {_key, positions} ->
+    ResonantCollinearity.find_antinodes_infinity(grid_dimension, positions)
+  end)
+  |> Enum.reduce([], fn {:ok, positions}, acc -> positions ++ acc end)
+  |> Enum.uniq()
+  |> Enum.count()
+end
+
+puzzle_2.()
+```
+
+## Benchmarks
+
+```elixir
+Benchee.run(
+  %{
+    "puzzle_1" => fn -> puzzle_1.() end,
+    "puzzle_2" => fn -> puzzle_2.() end
+  })
+```
+
+| Name     | ips    | average | deviation | median  | 99th %  |
+| -------- | ------ | ------- | --------- | ------- | ------- |
+| puzzle_1 | 1.99 K | 0.50 ms | ±19.11%  | 0.49 ms | 0.69 ms |
+| puzzle_2 | 0.93 K | 1.08 ms | ±20.49%  | 1.05 ms | 1.38 ms |
+
+<!-- livebook:{"offset":3421,"stamp":{"token":"XCP.-AU1Y0dL_bawTQ04g7IcG_dVK6Cm9DIYQ8e3tvatA2Xnjin5ncLcAAp2A2NSKA0_KIZTRpVnAyEHZEoXR6uJGY-o85I6y-iRKvevwNJ6EtP1L_ezZzI","version":2}} -->
