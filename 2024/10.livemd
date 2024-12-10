@@ -1,0 +1,117 @@
+# Advent of Code 2024 - Day 10
+
+```elixir
+Mix.install([
+  {:req, "~> 0.5"},
+  {:benchee, "~> 1.3"}
+])
+```
+
+## Input
+
+```elixir
+opts = [headers: [{"cookie", "session=#{System.fetch_env!("LB_AOC_SESSION")}"}]]
+puzzle_input = Req.get!("https://adventofcode.com/2024/day/10/input", opts).body
+```
+
+```elixir
+defmodule Grid do
+  def parse(puzzle_input) do
+    String.split(puzzle_input, "\n", trim: true)
+    |> Enum.reduce({[], 0, 0}, fn row, {list, _width, height} ->
+      {list ++ String.graphemes(row), String.length(row), height + 1}
+    end)
+  end
+
+  def at(grid, width, height, {x, y} = pos) do
+    if inside?(width, height, pos), do: Enum.at(grid, y * width + x), else: nil
+  end
+
+  def inside?(width, height, {x, y}) do
+    x >= 0 and x < width and y >= 0 and y < height
+  end
+
+  def find_valid_paths(grid, w, h, {x, y} = pos, last_num, acc) do
+    cell = at(grid, w, h, pos) || ""
+    
+    case Integer.parse(cell) do
+      {9, ""} when last_num == 8 ->
+        [pos | acc]
+
+      {num, ""} when num == last_num + 1 ->
+        [{0, -1}, {1, 0}, {0, 1}, {-1, 0}]
+        |> Enum.map(fn {dir_x, dir_y} -> {dir_x + x, dir_y + y} end)
+        |> Enum.flat_map(fn new_pos ->
+          find_valid_paths(grid, w, h, new_pos, num, acc)
+        end)
+        |> Enum.to_list()
+
+      _other ->
+        acc
+    end
+  end
+end
+```
+
+## Puzzle 1
+
+```elixir
+puzzle_1 = fn ->
+  {grid, w, h} = Grid.parse(puzzle_input)
+  
+  coords =
+    for x <- 0..(w - 1), y <- 0..(h - 1) do
+      {x, y}
+    end
+  
+  Enum.flat_map(coords, fn pos ->
+    case Grid.at(grid, w, h, pos) do
+      "0" -> Grid.find_valid_paths(grid, w, h, pos, -1, []) |> Enum.uniq()
+      _other -> []
+    end
+  end)
+  |> Enum.count()
+end
+
+puzzle_1.()
+```
+
+## Puzzle 2
+
+```elixir
+puzzle_2 = fn ->
+  {grid, w, h} = Grid.parse(puzzle_input)
+
+  coords =
+    for x <- 0..(w - 1), y <- 0..(h - 1) do
+      {x, y}
+    end
+
+  Enum.flat_map(coords, fn pos ->
+    case Grid.at(grid, w, h, pos) do
+      "0" -> Grid.find_valid_paths(grid, w, h, pos, -1, [])
+      _other -> []
+    end
+  end)
+  |> Enum.count()
+end
+
+puzzle_2.()
+```
+
+## Benchmarks
+
+```elixir
+Benchee.run(
+  %{
+    "puzzle_1" => fn -> puzzle_1.() end,
+    "puzzle_2" => fn -> puzzle_2.() end
+  })
+```
+
+| Name     | ips   | average  | deviation | median   | 99th %   |
+| -------- | ----- | -------- | --------- | -------- | -------- |
+| puzzle_1 | 30.16 | 33.16 ms | ±1.48%   | 33.02 ms | 35.96 ms |
+| puzzle_2 | 29.76 | 33.61 ms | ±6.48%   | 33.25 ms | 48.31 ms |
+
+<!-- livebook:{"offset":2472,"stamp":{"token":"XCP.RgtKqZcsfN6MXa1Dc1WdimG8-MnjTxgVsHvwJA_u_EOQra6cJQkVh2BvjoTkNhqZWLmeg_6mJoEs6eUW9ErLUS1YSeU9hJlfTCDRtPX-Aubz48UXQvA","version":2}} -->
