@@ -44,7 +44,6 @@ defmodule Grid do
         |> Enum.flat_map(fn new_pos ->
           find_valid_paths(grid, w, h, new_pos, num, acc)
         end)
-        |> Enum.to_list()
 
       _other ->
         acc
@@ -111,7 +110,7 @@ Benchee.run(
 
 | Name     | ips   | average  | deviation | median   | 99th %   |
 | -------- | ----- | -------- | --------- | -------- | -------- |
-| puzzle_1 | 30.16 | 33.16 ms | ±1.48%   | 33.02 ms | 35.96 ms |
-| puzzle_2 | 29.76 | 33.61 ms | ±6.48%   | 33.25 ms | 48.31 ms |
+| puzzle_2 | 29.75 | 33.62 ms | ±8.61%   | 33.33 ms | 53.41 ms |
+| puzzle_1 | 29.69 | 33.68 ms | ±6.49%   | 33.36 ms | 50.11 ms |
 
-<!-- livebook:{"offset":2472,"stamp":{"token":"XCP.RgtKqZcsfN6MXa1Dc1WdimG8-MnjTxgVsHvwJA_u_EOQra6cJQkVh2BvjoTkNhqZWLmeg_6mJoEs6eUW9ErLUS1YSeU9hJlfTCDRtPX-Aubz48UXQvA","version":2}} -->
+<!-- livebook:{"offset":2446,"stamp":{"token":"XCP.XGMv4rJWKAAkZT3netIGswWcG6Xy5oSWNVs_3KO5qT9iqfhy0QI4j66DxzzheQihycJa2pFXTpx9iEoF0kanpA8wTeEIyT4M4kYslQmRq496Q4Wr2_k","version":2}} -->
