@@ -117,7 +117,7 @@ Benchee.run(
 | puzzle_1 | 777.72 | 1.29 ms  | ±9.22%   | 1.27 ms  | 1.49 ms  |
 | puzzle_2 | 17.56  | 56.94 ms | ±9.79%   | 55.41 ms | 88.56 ms |
 
-## Other
+## Brute force
 
 ```elixir
 defmodule PlutonianPebblesBruteForce do
@@ -161,4 +161,4 @@ defmodule PlutonianPebblesBruteForce do
 end
 ```
 
-<!-- livebook:{"offset":3503,"stamp":{"token":"XCP.SzwbX6JfiyB7ti69v8oWHlxrhu2PHflXlfC96GWI8KcgI9B0QnHAbaa2l-1silc_NZ7sR_fA-AEHepwobFKnhxfN2qLCbgwo-98gikUNYNCtsM-U87M","version":2}} -->
+<!-- livebook:{"offset":3509,"stamp":{"token":"XCP.9BlYaySZcbRwkIhlrrkQ_WTSNDEUv7TN-0_WWSNef2bUnYVEh8NkX_tsMZhhDFFzawbRpM-CYWfK-0dBkwBt5s2Kci-ZVamN_MANihtTYWzCzr2t600","version":2}} -->
