@@ -28,6 +28,13 @@ defmodule PlutonianPebbles do
     :ets.new(:stones_cache, [:set, :public, :named_table])
   end
 
+  @doc """
+  iex> PlutonianPebbles.blink_stone(1700)
+  {17, 0}
+
+  iex> PlutonianPebbles.blink_stone(2)
+  4048
+  """
   def blink_stone(0), do: 1
 
   def blink_stone(stone) do
@@ -44,6 +51,11 @@ defmodule PlutonianPebbles do
     end
   end
 
+  @doc """
+  iex> PlutonianPebbles.init_cache()
+  iex> PlutonianPebbles.count_stones([125, 17], 6)
+  22
+  """
   def count_stones(stones, depth) when is_list(stones) do
     stones
     |> Enum.map(&count_stones(&1, depth))
@@ -161,4 +173,4 @@ defmodule PlutonianPebblesBruteForce do
 end
 ```
 
-<!-- livebook:{"offset":3509,"stamp":{"token":"XCP.9BlYaySZcbRwkIhlrrkQ_WTSNDEUv7TN-0_WWSNef2bUnYVEh8NkX_tsMZhhDFFzawbRpM-CYWfK-0dBkwBt5s2Kci-ZVamN_MANihtTYWzCzr2t600","version":2}} -->
+<!-- livebook:{"offset":3735,"stamp":{"token":"XCP.5iwK9Bz9hiWr3SbSq5zpl1GUKmZbMGylUknTJVTNd_uQ1bQaWXgLp_4AbnVQtr442RRHAStgTRCB-UISznX7hbwCTJJ72gU3-vZ6ua6G74OD7GiqQtU","version":2}} -->
