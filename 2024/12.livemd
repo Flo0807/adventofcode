@@ -1,0 +1,153 @@
+# Advent of Code 2024 - Day 08
+
+```elixir
+Mix.install([
+  {:req, "~> 0.5"},
+  {:benchee, "~> 1.3"}
+])
+```
+
+## Input
+
+```elixir
+opts = [headers: [{"cookie", "session=#{System.fetch_env!("LB_AOC_SESSION")}"}]]
+puzzle_input = Req.get!("https://adventofcode.com/2024/day/12/input", opts).body
+```
+
+```elixir
+garden =
+  puzzle_input
+  |> String.split("\n", trim: true)
+  |> Enum.map(&String.graphemes/1)
+  |> then(fn grid ->
+    for {row, y} <- Enum.with_index(grid), {value, x} <- Enum.with_index(row), into: %{} do
+      {{y, x}, value}
+    end
+  end)
+```
+
+```elixir
+defmodule GardenGroups do
+  def groups(garden) do
+    Enum.reduce(garden, [], fn {pos, plant}, acc ->
+      if pos in List.flatten(acc) do
+        acc
+      else
+        group = find_connected(garden, pos, plant, MapSet.new([])) |> MapSet.to_list()
+
+        [group | acc]
+      end
+    end)
+  end
+
+  def find_connected(garden, pos, plant, positions) do
+    if at(garden, pos) == plant and not MapSet.member?(positions, pos) do
+      positions = MapSet.put(positions, pos)
+
+      Enum.reduce(dirs(), positions, fn dir, acc ->
+        find_connected(garden, move_dir(dir, pos), plant, acc)
+      end)
+    else
+      positions
+    end
+  end
+
+def count_corners(garden, pos) do
+  plant = at(garden, pos)
+
+  [
+    {up(pos), left(pos), left(pos) |> up()},
+    {up(pos), right(pos), right(pos) |> up()},
+    {down(pos), left(pos), left(pos) |> down()},
+    {down(pos), right(pos), right(pos) |> down()}
+  ]
+  |> Enum.count(fn {pos1, pos2, diagonal} ->
+    val1 = at(garden, pos1)
+    val2 = at(garden, pos2)
+    diagonal_val = at(garden, diagonal)
+
+    # Convex corner: both adjacents are different from group
+    convex_corner = val1 != plant and val2 != plant
+
+    # Concave corner: both adjacents match group AND diagonal is different
+    concave_corner = val1 == plant and val2 == plant and diagonal_val != plant
+
+    convex_corner or concave_corner
+  end)
+end
+
+  def neighbors(garden, pos) do
+    Enum.map(dirs(), fn dir -> at(garden, move_dir(dir, pos)) end)
+  end
+
+  def at(garden, pos), do: Map.get(garden, pos)
+
+  def move_dir({dir_y, dir_x} = _dir, {y, x} = _pos), do: {dir_y + y, dir_x + x}
+  def dirs, do: [{1, 0}, {0, 1}, {-1, 0}, {0, -1}]
+
+  def up({y, x}), do: {y + 1, x}
+  def right({y, x}), do: {y, x + 1}
+  def down({y, x}), do: {y - 1, x}
+  def left({y, x}), do: {y, x - 1}
+end
+```
+
+## Puzzle 1
+
+```elixir
+puzzle_1 = fn ->
+  GardenGroups.groups(garden)
+  |> Task.async_stream(fn group ->
+    plant = GardenGroups.at(garden, hd(group))
+
+    fences =
+      Enum.flat_map(group, fn pos ->
+        GardenGroups.neighbors(garden, pos)
+      end)
+      |> Enum.filter(&(&1 != plant))
+      |> Enum.count()
+
+    fences * length(group)
+  end)
+  |> Enum.reduce(0, fn {:ok, cost}, acc -> cost + acc end)
+end
+
+puzzle_1.()
+```
+
+## Puzzle 2
+
+```elixir
+puzzle_2 = fn ->
+  GardenGroups.groups(garden)
+  |> Task.async_stream(fn group ->
+    corners =
+      Enum.map(group, fn pos ->
+        GardenGroups.count_corners(garden, pos)
+      end)
+      |> Enum.sum()
+
+    corners * length(group)
+  end)
+  |> Enum.reduce(0, fn {:ok, cost}, acc -> cost + acc end)
+end
+
+puzzle_2.()
+```
+
+## Benchmarks
+
+```elixir
+Benchee.run(
+  %{
+    "puzzle_1" => fn -> puzzle_1.() end,
+    "puzzle_2" => fn -> puzzle_2.() end
+  })
+```
+
+| Name     | ips  | average | deviation | median | 99th % |
+| -------- | ---- | ------- | --------- | ------ | ------ |
+| puzzle_1 | 0.23 | 4.36 s  | ±0.91%   | 4.36 s | 4.39 s |
+| puzzle_2 | 0.22 | 4.52 s  | ±4.85%   | 4.52 s | 4.67 s |
+
+<!-- livebook:{"offset":3512,"stamp":{"token":"XCP.nVQ90qFgc_IrAFZuM_6NqDlGADPBmOHQ-s4TTkM4O5pq-zV-gwsUNgxD3lkSnSM3V7AajgTpIxg6ldN8yQMfLrOia8RZJEK9qSCeulsGruG3N4GdlpQ","version":2}} -->
