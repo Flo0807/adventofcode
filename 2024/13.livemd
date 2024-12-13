@@ -1,0 +1,109 @@
+# Advent of Code 2024 - Day 13
+
+```elixir
+Mix.install([
+  {:req, "~> 0.5"},
+  {:benchee, "~> 1.3"}
+])
+```
+
+## Input
+
+```elixir
+opts = [headers: [{"cookie", "session=#{System.fetch_env!("LB_AOC_SESSION")}"}]]
+puzzle_input = Req.get!("https://adventofcode.com/2024/day/13/input", opts).body
+```
+
+```elixir
+puzzles =
+  puzzle_input
+  |> String.split("\n", trim: true)
+  |> Enum.chunk_every(3)
+  |> Enum.map(fn machine ->
+    Enum.map(machine, fn row ->
+      [[_patternx, x], [_patterny, y]] = Regex.scan(~r/[XY][+=](\d+)/, row)
+
+      {String.to_integer(x), String.to_integer(y)}
+    end)
+  end)
+```
+
+## Helpers
+
+```elixir
+defmodule ClawContraption do
+  # ax * x + bx * y = px
+  # ay * x + by * y = py
+  def solve([{ax, ay}, {bx, by}, {px, py}]) do
+    case ax * by - bx * ay do
+      0 ->
+        0
+
+      determinant ->
+        num_x = px * by - bx * py
+        num_y = ax * py - px * ay
+
+        if rem(num_x, determinant) == 0 and rem(num_y, determinant) == 0 do
+          x = div(num_x, determinant)
+          y = div(num_y, determinant)
+
+          {x, y}
+        else
+          0
+        end
+    end
+  end
+
+  def calculate_cost({x, y}), do: x * 3 + y
+  def calculate_cost(_result), do: 0
+end
+```
+
+## Puzzle 1
+
+```elixir
+puzzle_1 = fn ->
+  Enum.map(puzzles, fn puzzle ->
+    puzzle
+    |> ClawContraption.solve()
+    |> ClawContraption.calculate_cost()
+  end)
+  |> Enum.sum()
+end
+
+puzzle_1.()
+```
+
+## Puzzle 2
+
+```elixir
+puzzle_2 = fn ->
+  Enum.map(puzzles, fn puzzle ->
+    [{ax, ay}, {bx, by}, {px, py}] = puzzle
+    
+    [{ax, ay}, {bx, by}, {px + 10_000_000_000_000, py + 10_000_000_000_000}]
+    |> ClawContraption.solve()
+    |> ClawContraption.calculate_cost()
+  end)
+  |> Enum.sum()
+end
+
+puzzle_2.()
+```
+
+## Benchmarks
+
+```elixir
+Benchee.run(
+  %{
+    "puzzle_1" => fn -> puzzle_1.() end,
+    "puzzle_2" => fn -> puzzle_2.() end
+  })
+```
+
+| Name     | ips    | average    | deviation | median     | 99th %     |
+| -------- | ------ | ---------- | --------- | ---------- | ---------- |
+| puzzle_1 | 9.53 K | 104.96 μs | ±12.40%  | 104 μs    | 117.92 μs |
+| puzzle_2 | 1.15 K | 869.68 μs | ±16.67%  | 858.52 μs | 996.20 μs |
+
+<!-- livebook:{"offset":2142,"stamp":{"token":"XCP.MtpXai4P8QGhTrDlue3MIahNrfQJqYb3dCKbU5YrogwpS7OnDUPcvim05h12CuqBiglI2XRg8VuVA6WrK6E4dEHvtyFk-WTxdu5V1QidgvZW7CkX9QY","version":2}} -->
