@@ -1,0 +1,114 @@
+# Advent of Code 2024 - Day 14
+
+```elixir
+Mix.install([
+  {:req, "~> 0.5"},
+  {:benchee, "~> 1.3"}
+])
+```
+
+## Input
+
+```elixir
+opts = [headers: [{"cookie", "session=#{System.fetch_env!("LB_AOC_SESSION")}"}]]
+puzzle_input = Req.get!("https://adventofcode.com/2024/day/14/input", opts).body
+```
+
+```elixir
+size_x = 101
+size_y = 103
+
+robots =
+  puzzle_input
+  |> String.split("\n", trim: true)
+  |> Enum.map(fn robot ->
+    [<<"p=", pos::binary>>, <<"v=", vel::binary>>] = String.split(robot, " ")
+
+    [pos, vel]
+    |> Enum.map(fn x ->
+      String.split(x, ",") |> Enum.map(&String.to_integer/1) |> List.to_tuple()
+    end)
+    |> List.to_tuple()
+  end)
+```
+
+## Puzzle 1
+
+```elixir
+puzzle_1 = fn ->
+  mid_x = div(size_x, 2)
+  mid_y = div(size_y, 2)
+
+  robots
+  |> Enum.reduce({0, 0, 0, 0}, fn {{x, y}, {vx, vy}}, {tl, tr, bl, br} ->
+    x = Integer.mod(x + vx * 100, size_x)
+    y = Integer.mod(y + vy * 100, size_y)
+
+    case {x, y} do
+      {x, y} when x < mid_x and y < mid_y -> {tl + 1, tr, bl, br}
+      {x, y} when x > mid_x and y < mid_y -> {tl, tr + 1, bl, br}
+      {x, y} when x < mid_x and y > mid_y -> {tl, tr, bl + 1, br}
+      {x, y} when x > mid_x and y > mid_y -> {tl, tr, bl, br + 1}
+      _other -> {tl, tr, bl, br}
+    end
+  end)
+  |> then(fn {tl, tr, bl, br} ->
+    tl * tr * bl * br
+  end)
+end
+
+puzzle_1.()
+```
+
+## Puzzle 2
+
+```elixir
+# solved manually by printing each grid
+print_grid = fn points, size_x, size_y ->
+  points_set = MapSet.new(points)
+
+  for y <- 0..(size_y - 1) do
+    for x <- 0..(size_x - 1) do
+      if MapSet.member?(points_set, {x, y}) do
+        IO.write("X")
+      else
+        IO.write(".")
+      end
+    end
+
+    IO.puts("")
+  end
+end
+
+puzzle_2 = fn ->
+  for i <- Stream.iterate(0, &(&1 + 1)) do
+    Enum.map(robots, fn {{x, y}, {vx, vy}} ->
+      x = Integer.mod(x + vx * i, size_x)
+      y = Integer.mod(y + vy * i, size_y)
+
+      {x, y}
+    end)
+    |> print_grid.(size_x, size_y)
+
+    IO.puts("Seconds: #{i}")
+
+    Process.sleep(50)
+  end
+end
+
+# puzzle_2.()
+```
+
+## Benchmarks
+
+```elixir
+Benchee.run(%{
+  "puzzle_1" => fn -> puzzle_1.() end
+})
+```
+
+| Name     | ips    | average | deviation | median  | 99th %  |
+| -------- | ------ | ------- | --------- | ------- | ------- |
+| puzzle_1 | 253.20 | 3.95 ms | ±2.76%   | 3.93 ms | 4.33 ms |
+
+<!-- livebook:{"offset":2292,"stamp":{"token":"XCP.6JatXLsfrYdLjDm88uvgleZtc0giQ0qv_-yxBzApVTomwXJDn2zO9Pv8wlwyJ8ziOOEqYsBdHl0vv2cDYM9G4yV_Fj9UDCHfgjmdP4WjCwAuckms7UY","version":2}} -->
