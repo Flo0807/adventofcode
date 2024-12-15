@@ -1,0 +1,349 @@
+# Advent of Code 2024 - Day 15
+
+```elixir
+Mix.install([
+  {:req, "~> 0.5"},
+  {:benchee, "~> 1.3"}
+])
+```
+
+## Input
+
+```elixir
+opts = [headers: [{"cookie", "session=#{System.fetch_env!("LB_AOC_SESSION")}"}]]
+puzzle_input = Req.get!("https://adventofcode.com/2024/day/15/input", opts).body
+```
+
+```elixir
+[grid, movements] = String.split(puzzle_input, "\n\n", trim: true)
+
+grid =
+  grid
+  |> String.split("\n", trim: true)
+  |> Enum.map(&String.graphemes/1)
+  |> then(fn grid ->
+    for {row, y} <- Enum.with_index(grid), {value, x} <- Enum.with_index(row), into: %{} do
+      {{x, y}, value}
+    end
+  end)
+
+movements =
+  movements
+  |> String.split("\n")
+  |> Enum.flat_map(fn row ->
+    String.graphemes(row)
+    |> Enum.map(fn
+      "^" -> {0, -1}
+      ">" -> {1, 0}
+      "v" -> {0, 1}
+      "<" -> {-1, 0}
+    end)
+  end)
+```
+
+```elixir
+defmodule Grid do
+  def move_dir({dir_x, dir_y}, {x, y}), do: {x + dir_x, y + dir_y}
+
+  def at(grid, pos), do: Map.get(grid, pos)
+
+  def update(grid, pos, value), do: Map.put(grid, pos, value)
+
+  def print_grid(grid, size_x, size_y) do
+    for y <- 0..(size_y - 1) do
+      for x <- 0..(size_x - 1) do
+        Map.get(grid, {x, y}) |> IO.write()
+      end
+
+      IO.puts("")
+    end
+  end
+end
+```
+
+## Puzzle 1
+
+```elixir
+defmodule Puzzle1 do
+  def move(grid, [] = _movements, _current_pos), do: grid
+
+  def move(grid, [dir | tail], current_pos) do
+    facing_pos = Grid.move_dir(current_pos, dir)
+
+    case Grid.at(grid, facing_pos) do
+      "." ->
+        grid
+        |> Grid.update(current_pos, ".")
+        |> Grid.update(facing_pos, "@")
+        |> move(tail, facing_pos)
+
+      "#" ->
+        move(grid, tail, current_pos)
+
+      "O" ->
+        case push_boxes(grid, "O", facing_pos, dir, %{facing_pos => "."}) do
+          %{^facing_pos => "."} = push_result ->
+            grid
+            |> Map.merge(push_result)
+            |> Grid.update(current_pos, ".")
+            |> Grid.update(facing_pos, "@")
+            |> move(tail, facing_pos)
+
+          _not_pushed ->
+            move(grid, tail, current_pos)
+        end
+    end
+  end
+
+  def push_boxes(_grid, element, _pos, _dir, _new_positions) when element in [nil, "#"] do
+    %{}
+  end
+
+  def push_boxes(_grid, element, _pos, _dir, new_positions) when element == "." do
+    new_positions
+  end
+
+  def push_boxes(grid, element, pos, dir, new_positions) when element == "O" do
+    next_pos = Grid.move_dir(dir, pos)
+    facing_element = Grid.at(grid, next_pos)
+    new_positions = Map.put(new_positions, next_pos, element)
+
+    push_boxes(grid, facing_element, next_pos, dir, new_positions)
+  end
+end
+```
+
+```elixir
+puzzle_1 = fn ->
+  {start_pos, "@"} = Enum.find(grid, fn {_pos, value} -> value == "@" end)
+
+  Puzzle1.move(grid, movements, start_pos)
+  |> Enum.reduce(0, fn
+    {{x, y}, "O"}, acc ->
+      acc + (y * 100 + x)
+
+    _element, acc ->
+      acc
+  end)
+end
+
+puzzle_1.()
+```
+
+## Puzzle 2
+
+```elixir
+defmodule Puzzle2 do
+  def move(grid, [] = _movements, _current_pos), do: grid
+
+  def move(grid, [dir | tail], current_pos) do
+    facing_pos = Grid.move_dir(current_pos, dir)
+
+    case Grid.at(grid, facing_pos) do
+      "." ->
+        grid
+        |> Grid.update(current_pos, ".")
+        |> Grid.update(facing_pos, "@")
+        |> move(tail, facing_pos)
+
+      "#" ->
+        move(grid, tail, current_pos)
+
+      el when el in ["[", "]"] ->
+        box_left = if el == "[", do: facing_pos, else: get_other_box_part(el, facing_pos)
+        box_right = if el == "]", do: facing_pos, else: get_other_box_part(el, facing_pos)
+
+        case push_wide_box(grid, box_left, box_right, dir) do
+          {:ok, new_grid} ->
+            new_grid
+            |> Grid.update(current_pos, ".")
+            |> Grid.update(facing_pos, "@")
+            |> move(tail, facing_pos)
+
+          :error ->
+            move(grid, tail, current_pos)
+        end
+    end
+  end
+
+  def get_other_box_part("[", {x, y} = _pos), do: {x + 1, y}
+  def get_other_box_part("]", {x, y} = _pos), do: {x - 1, y}
+
+  # Horizontal movement
+  def push_wide_box(grid, box_left, box_right, {dx, dy} = dir) when dx != 0 and dy == 0 do
+    {check_pos, moving_box_part, other_box_part, box_to_check} =
+      cond do
+        dx == -1 -> {Grid.move_dir(box_left, dir), box_left, box_right, "]"}
+        dx == 1 -> {Grid.move_dir(box_right, dir), box_right, box_left, "["}
+      end
+
+    # Check position we want to move the box to
+    case Grid.at(grid, check_pos) do
+      # Position is empty, move the box
+      "." ->
+        move_box_horizontally(grid, moving_box_part, check_pos, other_box_part, dx)
+        |> ok()
+
+      # We would hit another box, try to move that box first
+      ^box_to_check ->
+        other_box_left = if dx < 0, do: Grid.move_dir(check_pos, dir), else: check_pos
+        other_box_right = if dx < 0, do: check_pos, else: Grid.move_dir(check_pos, dir)
+
+        case push_wide_box(grid, other_box_left, other_box_right, dir) do
+          # Other box was moved, move our box, too
+          {:ok, other_box_grid} ->
+            move_box_horizontally(other_box_grid, moving_box_part, check_pos, other_box_part, dx)
+            |> ok()
+
+          # Other box could not be moved, we can't move, too
+          :error ->
+            :error
+        end
+
+      _error ->
+        :error
+    end
+  end
+
+  # Vertical movement
+  def push_wide_box(grid, box_left, box_right, {dx, dy} = dir) when dx == 0 and dy != 0 do
+    new_left = Grid.move_dir(box_left, dir)
+    new_right = Grid.move_dir(box_right, dir)
+
+    # Check position we want to move the box to
+    case {Grid.at(grid, new_left), Grid.at(grid, new_right)} do
+      # Position is empty, move the box
+      {".", "."} ->
+        move_box_vertically(grid, box_left, box_right, new_left, new_right)
+        |> ok()
+
+      # We would hit another box, try to move that box first
+      {"[", "]"} ->
+        other_box_left = new_left
+        other_box_right = new_right
+
+        case push_wide_box(grid, other_box_left, other_box_right, dir) do
+          {:ok, other_box_grid} ->
+            move_box_vertically(other_box_grid, box_left, box_right, new_left, new_right)
+            |> ok()
+
+          :error ->
+            :error
+        end
+
+      # We would hit two other boxes, move them first
+      {"]", "["} ->
+        left_box_left = {elem(new_left, 0) - 1, elem(new_left, 1)}
+        left_box_right = new_left
+        right_box_left = new_right
+        right_box_right = {elem(new_right, 0) + 1, elem(new_right, 1)}
+
+        with {:ok, left_grid} <- push_wide_box(grid, left_box_left, left_box_right, dir),
+             {:ok, both_boxes_grid} <-
+               push_wide_box(left_grid, right_box_left, right_box_right, dir) do
+          # Boxes were moved, move our box, too
+          move_box_vertically(both_boxes_grid, box_left, box_right, new_left, new_right)
+          |> ok()
+        else
+          :error -> :error
+        end
+
+      {"]", "."} ->
+        # We would hit a box on the left side only
+        left_box_left = {elem(new_left, 0) - 1, elem(new_left, 1)}
+        left_box_right = new_left
+
+        case push_wide_box(grid, left_box_left, left_box_right, dir) do
+          {:ok, other_box_grid} ->
+            move_box_vertically(other_box_grid, box_left, box_right, new_left, new_right)
+            |> ok()
+
+          :error ->
+            :error
+        end
+
+      {".", "["} ->
+        # We would hit a box on the right side only
+        right_box_left = new_right
+        right_box_right = {elem(new_right, 0) + 1, elem(new_right, 1)}
+
+        case push_wide_box(grid, right_box_left, right_box_right, dir) do
+          {:ok, other_box_grid} ->
+            move_box_vertically(other_box_grid, box_left, box_right, new_left, new_right)
+            |> ok()
+
+          :error ->
+            :error
+        end
+
+      _error ->
+        :error
+    end
+  end
+
+  defp move_box_horizontally(grid, moving_box_part, check_pos, other_box_part, dx) do
+    grid
+    |> Grid.update(moving_box_part, if(dx < 0, do: "]", else: "["))
+    |> Grid.update(check_pos, if(dx < 0, do: "[", else: "]"))
+    |> Grid.update(other_box_part, ".")
+  end
+
+  defp move_box_vertically(grid, box_left, box_right, new_left, new_right) do
+    grid
+    |> Grid.update(box_left, ".")
+    |> Grid.update(box_right, ".")
+    |> Grid.update(new_left, "[")
+    |> Grid.update(new_right, "]")
+  end
+
+  def ok(grid), do: {:ok, grid}
+end
+```
+
+```elixir
+grid =
+  Enum.flat_map(grid, fn {{x, y}, value} ->
+    case value do
+      "@" -> [{{x * 2, y}, "@"}, {{x * 2 + 1, y}, "."}]
+      "O" -> [{{x * 2, y}, "["}, {{x * 2 + 1, y}, "]"}]
+      _value -> [{{x * 2, y}, value}, {{x * 2 + 1, y}, value}]
+    end
+  end)
+  |> Enum.into(%{})
+
+width = (Enum.map(grid, fn {{x, _y}, _value} -> x end) |> Enum.max()) + 1
+height = (Enum.map(grid, fn {{_x, y}, _value} -> y end) |> Enum.max()) + 1
+```
+
+```elixir
+puzzle_2 = fn ->
+  {start_pos, "@"} = Enum.find(grid, fn {_pos, value} -> value == "@" end)
+
+  Puzzle2.move(grid, movements, start_pos)
+  |> Enum.reduce(0, fn
+    {{x, y}, "["}, acc ->
+      acc + (y * 100 + x)
+
+    _element, acc ->
+      acc
+  end)
+end
+
+puzzle_2.()
+```
+
+## Benchmarks
+
+```elixir
+Benchee.run(%{
+  "puzzle_1" => fn -> puzzle_1.() end,
+  "puzzle_2" => fn -> puzzle_2.() end
+})
+```
+
+| Name     | ips    | average  | deviation | median   | 99th %   |
+| -------- | ------ | -------- | --------- | -------- | -------- |
+| puzzle_1 | 108.17 | 9.25 ms  | ±9.88%   | 9.11 ms  | 10.60 ms |
+| puzzle_2 | 82.49  | 12.12 ms | ±7.65%   | 11.97 ms | 14.27 ms |
+
+<!-- livebook:{"offset":9487,"stamp":{"token":"XCP.nmrPD8qFRUM0OZt6kM5iruuIN616rjDJzSCb9fHF7bRs-rJ6X-mOZMtNFvCyFx5sBEclKTo1FaTsqPKA2ZSwbgMf5LVAU06GX1WvZZv0RLHAAICJ4qk","version":2}} -->
