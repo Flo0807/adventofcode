@@ -1,0 +1,149 @@
+# Advent of Code 2024 - Day 18
+
+```elixir
+Mix.install([
+  {:req, "~> 0.5"},
+  {:benchee, "~> 1.3"}
+])
+```
+
+## Input
+
+```elixir
+opts = [headers: [{"cookie", "session=#{System.fetch_env!("LB_AOC_SESSION")}"}]]
+puzzle_input = Req.get!("https://adventofcode.com/2024/day/18/input", opts).body
+```
+
+```elixir
+# inclusive
+width = 70
+# inclusive
+height = 70
+
+obstacles =
+  String.split(puzzle_input, "\n", trim: true)
+  |> Enum.map(fn pos ->
+    [x, y] = String.split(pos, ",", parts: 2)
+
+    {String.to_integer(x), String.to_integer(y)}
+  end)
+```
+
+```elixir
+defmodule Grid do
+  def build_grid(obstacles, width, height) do
+    obstacles = MapSet.new(obstacles)
+
+    for y <- 0..height, x <- 0..width, into: %{} do
+      pos = {x, y}
+      value = if MapSet.member?(obstacles, pos), do: "#", else: "."
+
+      {pos, value}
+    end
+  end
+
+  def at(grid, pos), do: Map.get(grid, pos)
+  def move_dir({dir_x, dir_y}, {x, y}), do: {dir_x + x, dir_y + y}
+  def dirs, do: [{0, -1}, {1, 0}, {0, 1}, {-1, 0}]
+end
+```
+
+```elixir
+defmodule Puzzle1 do
+  def bfs(grid, to_pos) do
+    queue = :queue.in({{0, 0}, 0}, :queue.new())
+    visited = MapSet.new([{0, 0}])
+    distances = %{}
+
+    {_queue, _visited, distances} =
+      Stream.iterate(0, &(&1 + 1))
+      |> Enum.reduce_while({queue, visited, distances}, fn _i, {q, v, d} = acc ->
+        case :queue.out(q) do
+          {:empty, _q} ->
+            {:halt, acc}
+
+          {{:value, {pos, steps}}, q} ->
+            {q1, v1} =
+              Enum.map(Grid.dirs(), &Grid.move_dir(&1, pos))
+              |> Enum.filter(fn pos ->
+                Grid.at(grid, pos) == "." and not MapSet.member?(v, pos)
+              end)
+              |> Enum.reject(&MapSet.member?(v, &1))
+              |> Enum.reduce({q, v}, fn pos, {q, v} ->
+                {:queue.in({pos, steps + 1}, q), MapSet.put(v, pos)}
+              end)
+
+            d1 = Map.put(d, pos, steps)
+
+            {:cont, {q1, v1, d1}}
+        end
+      end)
+
+    Map.get(distances, to_pos)
+  end
+end
+```
+
+```elixir
+puzzle_1 = fn ->
+  grid = obstacles |> Enum.take(1024) |> Grid.build_grid(width, height)
+  Puzzle1.bfs(grid, {70, 70})
+end
+
+puzzle_1.()
+```
+
+## Puzzle 2
+
+```elixir
+defmodule Puzzle2 do
+  def find_first_blocking(obstacles, width, height) do
+    do_search({obstacles, width, height}, {width, height}, 0, length(obstacles) - 1)
+  end
+
+  defp do_search(_grid_data, _to_pos, left, right) when left > right, do: :error
+
+  defp do_search(grid_data, _to_pos, left, right) when left == right do
+    {obstacles, _width, _height} = grid_data
+    Enum.at(obstacles, left)
+  end
+
+  defp do_search(grid_data, to_pos, left, right) do
+    {obstacles, width, height} = grid_data
+
+    mid = div(left + right, 2)
+    obstacles = Enum.take(obstacles, mid + 1)
+
+    if Grid.build_grid(obstacles, width, height) |> Puzzle1.bfs(to_pos) do
+      do_search(grid_data, to_pos, mid + 1, right)
+    else
+      do_search(grid_data, to_pos, left, mid)
+    end
+  end
+end
+```
+
+```elixir
+puzzle_2 = fn ->
+  Puzzle2.find_first_blocking(obstacles, width, height)
+end
+
+puzzle_2.()
+```
+
+## Benchmarks
+
+```elixir
+Benchee.run(
+  %{
+    "puzzle_1" => fn -> puzzle_1.() end,
+    "puzzle_2" => fn -> puzzle_2.() end
+  })
+```
+
+| Name     | ips    | average  | deviation | median   | 99th %   |
+| -------- | ------ | -------- | --------- | -------- | -------- |
+| puzzle_1 | 203.34 | 4.92 ms  | ±10.51%  | 4.78 ms  | 5.90 ms  |
+| puzzle_2 | 42.11  | 23.74 ms | ±4.82%   | 23.74 ms | 28.71 ms |
+
+<!-- livebook:{"offset":3459,"stamp":{"token":"XCP.rigKQ66r4nDvqgnPAR2_MRhrOeSa-c7Y0fT1yxzIFN0NMMMgLn9zaI1O5kgsqYWe5UbwYUfWYf3qM-QXu-F7t0Xi8ThRQbkZFo5Y6Ndbw5jeFLk9Pg8","version":2}} -->
